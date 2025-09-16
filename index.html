@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dilip Kumar's Day Calculation Software</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Dilip Kumar's Day Calculation Software</h1>
+            <p>Calculate how many days you've lived up to September 1st, 2025.</p>
+        </header>
+
+        <main>
+            <section class="card input-section">
+                <h2>Calculate Your Days Lived</h2>
+                <form id="calculation-form">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" required placeholder="e.g., Dilip Kumar">
+                    </div>
+                    <div class="form-group">
+                        <label for="dob">Date of Birth (DOB):</label>
+                        <input type="date" id="dob" required>
+                    </div>
+                    <button type="submit" class="btn">Calculate</button>
+                </form>
+            </section>
+
+            <section class="card output-section hidden" id="output-section">
+                <h2>Your Results</h2>
+                <p><strong>Total Days Lived:</strong> <span id="total-days"></span> days</p>
+                <p><strong>Age Breakdown:</strong> <span id="age-breakdown"></span></p>
+            </section>
+        </main>
+
+        <section class="card record-list-section">
+            <h2>Record List</h2>
+            <div class="table-container">
+                <table id="record-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>DOB</th>
+                            <th>Days Lived</th>
+                            <th>Age Lived</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+            <button id="export-btn" class="btn hidden">Export to CSV</button>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Day Calculation Software</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
