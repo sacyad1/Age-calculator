@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const recordTableBody = document.querySelector('#record-table tbody');
     const exportBtn = document.getElementById('export-btn');
 
-    const TARGET_DATE = new Date('2025-09-01T00:00:00');
+    const TARGET_DATE = new Date('2025-06-01T00:00:00');
 
     // Function to calculate age and days lived
     function calculateAge(dobString) {
@@ -123,4 +123,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial load
     loadRecords();
+
 });
