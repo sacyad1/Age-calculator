@@ -1,127 +1,69 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('calculation-form');
-    const outputSection = document.getElementById('output-section');
-    const totalDaysEl = document.getElementById('total-days');
-    const ageBreakdownEl = document.getElementById('age-breakdown');
-    const recordTableBody = document.querySelector('#record-table tbody');
-    const exportBtn = document.getElementById('export-btn');
+const dob = document.getElementById('dob');
+const on = document.getElementById('on');
+const err = document.getElementById('err');
+const result = document.getElementById('result');
+const $ = id => document.getElementById(id);
 
-    const TARGET_DATE = new Date('2025-06-01T00:00:00');
+function toInput(d){
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate());
+}
+function parse(v){
+  const [y,m,d] = v.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function setDefaults(){
+  const today = new Date();
+  on.value = toInput(today);
+  dob.max = toInput(today);
+}
 
-    // Function to calculate age and days lived
-    function calculateAge(dobString) {
-        const dobDate = new Date(dobString);
-        
-        // Calculate total days
-        const diffInTime = TARGET_DATE.getTime() - dobDate.getTime();
-        const totalDays = Math.floor(diffInTime / (1000 * 60 * 60 * 24));
+function calculate(){
+  err.textContent = '';
+  if(!dob.value){ err.textContent = 'Choose a date of birth.'; result.hidden = true; return; }
+  const birth = parse(dob.value);
+  const target = on.value ? parse(on.value) : new Date();
+  if(birth > target){
+    err.textContent = 'Date of birth must be before the comparison date.';
+    result.hidden = true; return;
+  }
 
-        // Calculate years, months, days
-        let years = TARGET_DATE.getFullYear() - dobDate.getFullYear();
-        let months = TARGET_DATE.getMonth() - dobDate.getMonth();
-        let days = TARGET_DATE.getDate() - dobDate.getDate();
+  let years = target.getFullYear() - birth.getFullYear();
+  let months = target.getMonth() - birth.getMonth();
+  let days = target.getDate() - birth.getDate();
 
-        if (days < 0) {
-            months--;
-            const daysInLastMonth = new Date(TARGET_DATE.getFullYear(), TARGET_DATE.getMonth(), 0).getDate();
-            days += daysInLastMonth;
-        }
+  if(days < 0){
+    months--;
+    // days in the month before the target month
+    days += new Date(target.getFullYear(), target.getMonth(), 0).getDate();
+  }
+  if(months < 0){ years--; months += 12; }
 
-        if (months < 0) {
-            years--;
-            months += 12;
-        }
+  const ms = 24*60*60*1000;
+  const totalDays = Math.round((Date.UTC(target.getFullYear(), target.getMonth(), target.getDate())
+                  - Date.UTC(birth.getFullYear(), birth.getMonth(), birth.getDate())) / ms);
 
-        return {
-            totalDays,
-            ageBreakdown: `${years} years, ${months} months, ${days} days`
-        };
-    }
+  // next birthday
+  let next = new Date(target.getFullYear(), birth.getMonth(), birth.getDate());
+  if(next < target) next = new Date(target.getFullYear()+1, birth.getMonth(), birth.getDate());
+  const untilNext = Math.round((Date.UTC(next.getFullYear(), next.getMonth(), next.getDate())
+                  - Date.UTC(target.getFullYear(), target.getMonth(), target.getDate())) / ms);
 
-    // Load records from local storage and display them
-    function loadRecords() {
-        const records = JSON.parse(localStorage.getItem('records')) || [];
-        recordTableBody.innerHTML = ''; // Clear existing records
-        records.forEach(record => addRecordToTable(record, false));
-        if (records.length > 0) {
-            exportBtn.classList.remove('hidden');
-        }
-    }
+  $('y').textContent = years;
+  $('m').textContent = months;
+  $('d').textContent = days;
+  $('tm').textContent = (years*12 + months).toLocaleString();
+  $('tw').textContent = Math.floor(totalDays/7).toLocaleString();
+  $('td').textContent = totalDays.toLocaleString();
+  $('nb').textContent = untilNext === 0 ? 'Today!' :
+    next.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'}) +
+    ' (in ' + untilNext + (untilNext === 1 ? ' day)' : ' days)');
+  result.hidden = false;
+}
 
-    // Add a new record to the table and local storage
-    function addRecordToTable(record, saveToStorage = true) {
-        const row = recordTableBody.insertRow();
-        row.innerHTML = `
-            <td>${record.name}</td>
-            <td>${record.dob}</td>
-            <td>${record.totalDays}</td>
-            <td>${record.ageBreakdown}</td>
-        `;
-
-        if (saveToStorage) {
-            const records = JSON.parse(localStorage.getItem('records')) || [];
-            records.push(record);
-            localStorage.setItem('records', JSON.stringify(records));
-        }
-    }
-
-    // Handle form submission
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const name = document.getElementById('name').value;
-        const dob = document.getElementById('dob').value;
-        
-        const { totalDays, ageBreakdown } = calculateAge(dob);
-
-        totalDaysEl.textContent = totalDays;
-        ageBreakdownEl.textContent = ageBreakdown;
-        outputSection.classList.remove('hidden');
-
-        const newRecord = {
-            name: name,
-            dob: dob,
-            totalDays: totalDays,
-            ageBreakdown: ageBreakdown
-        };
-
-        addRecordToTable(newRecord);
-        form.reset(); // Clear form fields
-        exportBtn.classList.remove('hidden');
-    });
-
-    // Export records to CSV
-    exportBtn.addEventListener('click', () => {
-        const records = JSON.parse(localStorage.getItem('records')) || [];
-        if (records.length === 0) {
-            alert("No records to export!");
-            return;
-        }
-
-        let csvContent = "data:text/csv;charset=utf-8,";
-        const header = ["Name", "DOB", "Days Lived", "Age Lived"].join(",");
-        csvContent += header + "\n";
-
-        records.forEach(record => {
-            const row = [
-                `"${record.name}"`, 
-                `"${record.dob}"`, 
-                record.totalDays, 
-                `"${record.ageBreakdown}"`
-            ].join(",");
-            csvContent += row + "\n";
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "day_calculation_records.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
-
-    // Initial load
-    loadRecords();
-
+$('calc').addEventListener('click', calculate);
+$('reset').addEventListener('click', () => {
+  dob.value = ''; err.textContent = ''; result.hidden = true; setDefaults();
 });
+[dob,on].forEach(el => el.addEventListener('keydown', e => { if(e.key === 'Enter') calculate(); }));
+setDefaults();
